@@ -1,0 +1,225 @@
+<!--
+    Winhweel.js basic code wheel example by Douglas McKechie @ www.dougtesting.net
+    See website for tutorials and other documentation.
+
+    The MIT License (MIT)
+
+    Copyright (c) 2016 Douglas McKechie
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+-->
+<html>
+    <head>
+        <title>LMCI/D Wheel of Fortune</title>
+        <link rel="stylesheet" href="main.css" type="text/css" />
+        <script type="text/javascript" src="Winwheel.js"></script>
+        <script src="http://cdnjs.cloudflare.com/ajax/libs/gsap/latest/TweenMax.min.js"></script>
+        <style>
+          #results {
+            margin-top: 50px;
+            margin-bottom: 50px;
+            margin-left: auto;
+            margin-right: auto;
+            width: 80%;
+            text-align: center;
+            font-size: 50px;
+            font-weight: bold;
+          }
+          .button {
+            background-color: #4CAF50; /* Green */
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin:16px;
+          }
+        </style>
+    </head>
+    <body>
+        <div align="center">
+            <table cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                    <td width="438" height="582" class="the_wheel" align="center" valign="center">
+                        <canvas id="canvas" width="434" height="434">
+                            <p style="{color: white}" align="center">Sorry, your browser doesn't support canvas. Please try another.</p>
+                        </canvas>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="power_controls" style="text-align:center;">
+            <div id="results">&nbsp;</div>
+            <span id="spin_button" onClick="startSpin();" class="button">SPIN</span>
+            <div id="input_form">
+              <textarea id="newdata" cols="50" rows="30" placeholder="Oliva Wash,Tisha Vigil,Elvis Hearst,Sophia Rudie,Russ Geibel,Lucio Means,Lynelle Yau,Millard Hermsen,Melia Read,Marcell Pelton"></textarea><br />
+              <span id="setnewnames" class="button" onClick="loadNewNames();">Set New Names</span>
+            </div>
+        </div>
+        <script>
+            const color_palette = ['#F0F8FF','#FAEBD7','#00FFFF','#7FFFD4','#F0FFFF','#F5F5DC','#FFE4C4','#FFEBCD','#0000FF','#8A2BE2','#A52A2A','#DEB887','#5F9EA0','#7FFF00','#D2691E','#FF7F50','#6495ED','#FFF8DC','#DC143C','#00FFFF','#00008B','#008B8B','#B8860B','#A9A9A9','#A9A9A9','#006400','#BDB76B','#8B008B','#556B2F','#FF8C00','#9932CC','#8B0000','#E9967A','#8FBC8F','#483D8B','#2F4F4F','#2F4F4F','#00CED1','#9400D3','#FF1493','#00BFFF','#696969','#696969','#1E90FF','#B22222','#FFFAF0','#228B22','#FF00FF','#DCDCDC','#F8F8FF','#FFD700','#DAA520','#808080','#808080','#008000','#ADFF2F','#F0FFF0','#FF69B4','#CD5C5C','#4B0082','#FFFFF0','#F0E68C','#E6E6FA','#FFF0F5','#7CFC00','#FFFACD','#ADD8E6','#F08080','#E0FFFF','#FAFAD2','#D3D3D3','#D3D3D3','#90EE90','#FFB6C1','#FFA07A','#20B2AA','#87CEFA','#778899','#778899','#B0C4DE','#FFFFE0','#00FF00','#32CD32','#FAF0E6','#FF00FF','#800000','#66CDAA','#0000CD','#BA55D3','#9370DB','#3CB371','#7B68EE','#00FA9A','#48D1CC','#C71585','#191970','#F5FFFA','#FFE4E1','#FFE4B5','#FFDEAD','#000080','#FDF5E6','#808000','#6B8E23','#FFA500','#FF4500','#DA70D6','#EEE8AA','#98FB98','#AFEEEE','#DB7093','#FFEFD5','#FFDAB9','#CD853F','#FFC0CB','#DDA0DD','#B0E0E6','#800080','#663399','#FF0000','#BC8F8F','#4169E1','#8B4513','#FA8072','#F4A460','#2E8B57','#FFF5EE','#A0522D','#C0C0C0','#87CEEB','#6A5ACD','#708090','#708090','#FFFAFA','#00FF7F','#4682B4','#D2B48C','#008080','#D8BFD8','#FF6347','#40E0D0','#EE82EE','#F5DEB3','#FFFFFF','#F5F5F5','#FFFF00','#9ACD32'];
+            var queryString = document.location.search;
+            if (queryString.length == 0) {
+              queryString = "?names=Oliva%20Wash%2CTisha%20Vigil%2CElvis%20Hearst%2CSophia%20Rudie%2CRuss%20Geibel%2CLucio%20Means%2CLynelle%20Yau%2CMillard%20Hermsen%2CMelia%20Read%2CMarcell%20Pelton";
+            }
+            var params = {};
+            if (queryString.indexOf('?') === 0) {queryString = queryString.substr(1);}
+            queryString = queryString.replace(/\n\n/,"\n");
+            var parts = queryString.split('&');
+            for(var i = 0; i < parts.length; i++) {
+                var keyValuePair = parts[i].split('=');
+                params[keyValuePair[0]] = decodeURIComponent(keyValuePair[1]).replace(/\+/g, ' ');
+            }
+            names = params["names"].split(',').filter(function (e){return e != '';});
+            console.log(params["names"]);
+            document.getElementById("newdata").value = params["names"].replace(/,+/g,"\n");
+            data = [];
+            for (var i=0; i < names.length; i++){
+                console.log("Adding student: " + names[i]);
+                data.push({"fillStyle":color_palette[i%color_palette.length], "text":names[i]});
+            }
+            console.log("Configured for " + data.length + " students:");
+            console.log(data);
+            // Create new wheel object specifying the parameters at creation time.
+            let theWheel = new Winwheel({
+                'numSegments'  : data.length,     // Specify number of segments.
+                'outerRadius'  : 212,   // Set outer radius so wheel fits inside the background.
+                'textFontSize' : 14,    // Set font size as desired.
+                'segments'     : data,  // Define segments including colour and text.
+                'animation': {          // Specify the animation to use.
+                    'type'     : 'spinToStop',
+                    'duration' : 5,     // Duration in seconds.
+                    'spins'    : 15,     // Number of complete spins.
+                    'callbackFinished' : alertPrize
+                }
+            });
+
+            // Vars used by the code in this page to do power controls.
+            let wheelPower    = 0;
+            let wheelSpinning = false;
+
+            function powerSelected(powerLevel){
+                // -------------------------------------------------------
+                // Function to handle the onClick on the power buttons.
+                // -------------------------------------------------------
+                // Ensure that power can't be changed while wheel is spinning.
+                if (wheelSpinning == false) {
+                    // Reset all to grey incase this is not the first time the user has selected the power.
+                    document.getElementById('pw1').className = "";
+                    document.getElementById('pw2').className = "";
+                    document.getElementById('pw3').className = "";
+
+                    // Now light up all cells below-and-including the one selected by changing the class.
+                    if (powerLevel >= 1) {
+                        document.getElementById('pw1').className = "pw1";
+                    }
+
+                    if (powerLevel >= 2) {
+                        document.getElementById('pw2').className = "pw2";
+                    }
+
+                    if (powerLevel >= 3) {
+                        document.getElementById('pw3').className = "pw3";
+                    }
+
+                    // Set wheelPower var used when spin button is clicked.
+                    wheelPower = powerLevel;
+
+                    // Light up the spin button by changing it's source image and adding a clickable class to it.
+                    //document.getElementById('spin_button').src = "spin_on.png";
+                    //document.getElementById('spin_button').className = "clickable";
+                }
+            }
+
+            function startSpin(){
+                // -------------------------------------------------------
+                // Click handler for spin button.
+                // -------------------------------------------------------
+                resetWheel();
+                // Ensure that spinning can't be clicked again while already running.
+                if (wheelSpinning == false) {
+                    // Based on the power level selected adjust the number of spins for the wheel, the more times is has
+                    // to rotate with the duration of the animation the quicker the wheel spins.
+                    if (wheelPower == 1) {
+                        theWheel.animation.spins = 3;
+                    } else if (wheelPower == 2) {
+                        theWheel.animation.spins = 8;
+                    } else if (wheelPower == 3) {
+                        theWheel.animation.spins = 15;
+                    }
+
+                    // Disable the spin button so can't click again while wheel is spinning.
+                    // document.getElementById('spin_button').src       = "spin_off.png";
+                    // document.getElementById('spin_button').className = "";
+
+                    // Begin the spin animation by calling startAnimation on the wheel object.
+                    theWheel.startAnimation();
+
+                    // Set to true so that power can't be changed and spin button re-enabled during
+                    // the current animation. The user will have to reset before spinning again.
+                    wheelSpinning = true;
+                }
+            }
+
+            function resetWheel(){
+                // -------------------------------------------------------
+                // Function for reset button.
+                // -------------------------------------------------------
+                theWheel.stopAnimation(false);  // Stop the animation, false as param so does not call callback function.
+                theWheel.rotationAngle = 0;     // Re-set the wheel angle to 0 degrees.
+                theWheel.draw();                // Call draw to render changes to the wheel.
+
+                // document.getElementById('pw1').className = "";  // Remove all colours from the power level indicators.
+                // document.getElementById('pw2').className = "";
+                // document.getElementById('pw3').className = "";
+
+                wheelSpinning = false;          // Reset to false to power buttons and spin can be clicked again.
+            }
+
+            function alertPrize(indicatedSegment){
+                // -------------------------------------------------------
+                // Called when the spin animation has finished by the callback feature of the wheel because I specified callback in the parameters
+                // note the indicated segment is passed in as a parmeter as 99% of the time you will want to know this to inform the user of their prize.
+                // -------------------------------------------------------
+                // Do basic alert of the segment text. You would probably want to do something more interesting with this information.
+                console.log(indicatedSegment.text);
+                //document.getElementById("results").style.display = "block";
+                document.getElementById("results").innerHTML = indicatedSegment.text;
+                // setTimeout(() => {resetWheel();}, 10000);
+            }
+
+            function loadNewNames(){
+              nameslist = document.getElementById("newdata").value;
+              if (nameslist.length > 0){
+                nameslist = nameslist.replace(/\t/g," ");
+                nameslist = nameslist.replace(/\n\n/g,"\n");
+                nameslist = nameslist.split(/\r?\n/);
+                nameslist = nameslist.join(",")
+                nameslist = encodeURIComponent(nameslist);
+                console.log(nameslist);
+                window.location.replace("?names=" + nameslist)
+              }
+            }
+        </script>
+    </body>
+    <footer>
+      <div style="text-align:center;"><span>Original source code at <a href="https://github.com/zarocknz/javascript-winwheel">https://github.com/zarocknz/javascript-winwheel</a></span></div>
+</html>
